@@ -25,14 +25,19 @@ if [ "$PACKAGES" != "" ] ; then
     chroot /mnt/sdb/ apk add --no-progress --no-cache $PACKAGES
 fi
 
-cp /mnt/sdc1/setup-wasm-networking /mnt/sdb/etc/init.d/
-chmod 755 /mnt/sdb/etc/init.d/setup-wasm-networking
+SERVICES=$(cat /mnt/sdc1/services)
+if [ "$SERVICES" != "" ] ; then
+    chroot /mnt/sdb/ apk add --no-progress --no-cache openrc
+    for service in $SERVICES; do
+        chroot /mnt/sdb/ rc-update add "$service"
+    done
+fi
+
 mkdir /mnt/sdb/etc/runlevels/additional
 cat <<'EOF' >> /mnt/sdb/etc/inittab
 # Additional initialization
 ::once:/sbin/openrc additional &> /dev/null
 EOF
-chroot /mnt/sdb/ rc-update add setup-wasm-networking additional
 cp /mnt/sdc1/root-profile /mnt/sdb/root/.profile
 chmod 644 /mnt/sdb/root/.profile
 

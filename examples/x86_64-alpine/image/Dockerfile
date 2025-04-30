@@ -1,4 +1,5 @@
 ARG PACKAGES=
+ARG SERVICES=
 
 FROM golang AS create-image-dev
 COPY ./create-image ./create-image
@@ -15,12 +16,13 @@ RUN dd if=/dev/zero of=/out/disk-rootfs.img bs=150M count=1 && \
     mkfs.ext4 -O ^has_journal /out/disk-rootfs.img
 COPY ./init.sh /out/
 COPY ./create-image.sh /out/
-COPY ./setup-wasm-networking /out/
 COPY ./root-profile /out/
 COPY --from=create-image-dev /out/create-image /
 COPY ./create-image-args-x86_64.json .
 ARG PACKAGES
 RUN echo -n $PACKAGES > /out/packages
+ARG SERVICES
+RUN echo -n $SERVICES > /out/services
 RUN /create-image --args-json=create-image-args-x86_64.json qemu-system-x86_64
 
 FROM scratch
